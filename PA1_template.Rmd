@@ -12,13 +12,23 @@ df1<-read.csv(unz("activity.zip", "activity.csv"), colClasses=c("numeric","Date"
 dim(df1)
 
 
-
-
-
-```{r}
+```
 
 ## What is mean total number of steps taken per day?
 
+```{r AveStepsPerDay}
+
+dfStepsPerDay<-aggregate(steps~date,data=df1,sum)
+myMean<-summary(dfStepsPerDay$steps)[4]
+myMedian<-summary(dfStepsPerDay$steps)[3]
+summary(dfStepsPerDay$steps)
+hist(dfStepsPerDay$steps,xlab="Steps Per Day",main="Histogram of Steps Per Day",col="blue")
+
+
+```
+
+The mean number of steps per day is `r myMean`.  
+The median number of steps per day is `r myMedian`.
 
 
 ## What is the average daily activity pattern?
