@@ -33,6 +33,22 @@ The median number of steps per day is `r myMedian`.
 
 ## What is the average daily activity pattern?
 
+```{r MaxInterval}
+
+dfStepsPerInterval<-aggregate(steps~interval,data=df1,mean)
+maxStepsInterval<-dfStepsPerInterval[dfStepsPerInterval$steps==max(dfStepsPerInterval$steps),]
+maxInterval<-maxStepsInterval[1]
+maxSteps<-round(maxStepsInterval[2],0)
+
+
+plot(dfStepsPerInterval$steps~dfStepsPerInterval$interval,type="l",col="blue",
+     ylab="Mean Number of Steps",xlab="Interval",main="Mean Steps Per Interval")
+
+
+```
+
+The 5-minute interval, on average across all the days in the dataset, containing the maximum number of steps is interval `r maxInterval`.   
+The mean number of steps in this interval is `r maxSteps`.
 
 
 ## Imputing missing values
