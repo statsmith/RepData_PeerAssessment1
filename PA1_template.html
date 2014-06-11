@@ -183,6 +183,8 @@ hljs.initHighlightingOnLoad();
 
 <h2>Loading and preprocessing the data</h2>
 
+<p>First, let&#39;s get the data and check the dimensions of the data frame.</p>
+
 <pre><code class="r">setwd(&quot;C:/Users/Owner/Documents/DataScienceCertification/RepoResearch/peer1/RepData_PeerAssessment1&quot;)
 
 df1&lt;-read.csv(unz(&quot;activity.zip&quot;, &quot;activity.csv&quot;), colClasses=c(&quot;numeric&quot;,&quot;Date&quot;,&quot;numeric&quot;))
@@ -195,6 +197,9 @@ dim(df1)
 </code></pre>
 
 <h2>What is mean total number of steps taken per day?</h2>
+
+<p>Now we plot a histogram of the total number of steps taken per day and<br/>
+calculate the associated mean and median&hellip; </p>
 
 <pre><code class="r">dfStepsPerDay&lt;-aggregate(steps~date,data=df1,sum)
 myMean&lt;-summary(dfStepsPerDay$steps)[4]
@@ -216,6 +221,9 @@ The median number of steps per day is 1.08 &times; 10<sup>4</sup>.</p>
 
 <h2>What is the average daily activity pattern?</h2>
 
+<p>Here we simply calculate the means number of steps for each time interval, generate<br/>
+a plot, and find the interval with the highest mean&hellip;</p>
+
 <pre><code class="r">dfStepsPerInterval&lt;-aggregate(steps~interval,data=df1,mean)
 maxStepsInterval&lt;-dfStepsPerInterval[dfStepsPerInterval$steps==max(dfStepsPerInterval$steps),]
 maxInterval&lt;-maxStepsInterval[1]
@@ -232,6 +240,98 @@ plot(dfStepsPerInterval$steps~dfStepsPerInterval$interval,type=&quot;l&quot;,col
 The mean number of steps in this interval is 206.</p>
 
 <h2>Imputing missing values</h2>
+
+<p>Time to deal with missing values (NA).  First, how many are there?</p>
+
+<pre><code class="r">nMissing&lt;-sum(is.na(df1))
+</code></pre>
+
+<p>The number of missing values in the dataset = 2304.  </p>
+
+<p>Now impute missing values - keeping it simple by imputing means for each interval&hellip;<br/>
+Include a quick view of the data sets and dimensions to ensure successful imputation</p>
+
+<pre><code class="r">dfMeans&lt;-aggregate(steps~interval,data=df1,mean,rm.NA=TRUE)
+
+df1NA&lt;-df1[is.na(df1$steps),]
+df2&lt;-merge(df1NA[,c(&quot;date&quot;,&quot;interval&quot;)],dfMeans)
+df3&lt;-rbind(df1,df2)
+df4&lt;-df3[complete.cases(df3),]
+df4&lt;-df4[order(df4$date, df4$interval),]
+
+head(df1)
+</code></pre>
+
+<pre><code>##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+</code></pre>
+
+<pre><code class="r">head(df4)
+</code></pre>
+
+<pre><code>##         steps       date interval
+## 17569 1.71698 2012-10-01        0
+## 17578 0.33962 2012-10-01        5
+## 17585 0.13208 2012-10-01       10
+## 17597 0.15094 2012-10-01       15
+## 17601 0.07547 2012-10-01       20
+## 17613 2.09434 2012-10-01       25
+</code></pre>
+
+<pre><code class="r">dim(df1)
+</code></pre>
+
+<pre><code>## [1] 17568     3
+</code></pre>
+
+<pre><code class="r">dim(df4)
+</code></pre>
+
+<pre><code>## [1] 17568     3
+</code></pre>
+
+<p>After successfully imputing missing data, we plot a histogram of total steps per day</p>
+
+<pre><code class="r">dfStepsPerDayImputed&lt;-aggregate(steps~date,data=df4,sum)
+hist(dfStepsPerDayImputed$steps,xlab=&quot;Steps Per Day&quot;,main=&quot;Histogram of Steps Per Day with Imputed Data&quot;,col=&quot;blue&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfgAAAH4CAMAAACR9g9NAAAAnFBMVEX9/v0AAAAAADkAAGUAAP8AOTkAOWUAOY8AZo8AZrU5AAA5ADk5AGU5OWU5OY85ZmU5ZrU5j485j9plAABlADllAGVlOQBlOY9lZjllZmVltbVltf2POQCPOTmPOWWPjzmPtY+P27WP29qP2/21ZgC1Zjm1tWW124+1/rW1/tq1/v3ajzna/rXa/tra/v39tWX924/9/rX9/tr9/v2cHaSgAAAANHRSTlP///////////////////////////////////////////////////////////////////8AS1ciZQAAAAlwSFlzAAALEgAACxIB0t1+/AAAET1JREFUeJztnQt74rgVhmvS7TTsNp3C7JXMdHdCt23Yxlz+/3+rJV8w4XA5yLItzvs+zy5JMJ+l8yLZMFj8aQcm+dPQDYBhQLxREG8UxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFGQbxREG8UxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFG6VH8Zv7wutttnx9ey59qlouA0PU0m7xU8Vn24e2aPLdlgbjZufsOt3NdKHbl+vPur+c5at5m7pst7jqoNmcZRPzBn5eXq3yG5tFl2R6vyasqXD1hxPuy2bU714o/bt478e1dh9XmLMON+GKsZg+v2+dS16rqcfH7w3+KSmyfJz8VavJSUJ79tfj762o/Hsrt/aPLsq2nH96K3P+28hZ+b7+73eyq3VUNcQ9Zuv01m/m9NY3M3ablvr3YvGpb8eOq+LEI+KPeVfHHf0/3yQ+v7bY2u/cPLR72v8Pm+Q780og/2rXfOD/1JA1iMPHl87uuxDIrx6vv6zdTJ97d+0e50Vue1VQVrrY/EN9Ussmrnhluk2p3VYVr8Qeb+TurMVsMtfoRqyJ3WRbe/+hVzDZ78VXT6y6229rs/p34o+btpF2XG7db3iG9iq/r4broRqj/s5vO1tOispv55GU99YPKi3+sH+aK6R7gKlIaaLbfT4a+hv646/OKcFfs4q9ugGaLZne71lTf3qy1t12puPptPX2sp/P1tBD+czGaJy9+u3KqL/ZQp79va7P7WvzbYfOa7sq7bnp3zbmDksHE+99qUbmve9Fl/8OmnOpf6ge5Yj76ztd/bbZvHwWXZWCZV6ktla3cCM1aU31WH0Gazeq5tF39ct/b52LiqQf04/rbX799WVZHq1K8fw62xe/b2uz+UHyz36a78q6r3lW/dMuwx/isGrOnxPttGvH7p4MovpruZfHN7nb7Sp8Rv3RzRHVoWU1+nVYnXMuH34szkF/mj7uW+Frpri2+bOst4tu7LqeH1iGuO4Z9ObesRElTvVNRGjsWL0z1q/qMvplLHc1c2+xu1xLf2uxQfO7Pzsp9t14x7vLJTx/eln+fLq4W30z1xaZ+Tj9onjDVH+x66R9V/dItg4lvPavlkztX7DyTR3yz/V68lFedI7of2uOmEd/abC8+q0686n27NtXbF/fOChNedbWrS+KrM7Nl6weheSd27TZufumWYaf6ajovOl6/nCt6X7+ccyqKns+qI8CB+Gb7/VR/mLcs61m+nnKFre/etcXvN3snfrHf986fyJf4gZu7R9RdKE69z0/11e5drn/ddtA8/0T/x/EbOPWu/cZNOzpljG/Z5t29eDl6u+gWbq96J7uPw8jEV8/6q943u4YuKh+Qgfiryatjd0d0UPnVFe/cR9x9LMYmHnoC8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFGQbxREG8UxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFGQbxREG8UxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbxYL4rFOG7k1HmBD/5w5BfDogXgDxiJfZfP+6//KHNEG8wDXinfvd+mMfzYkC4gWuEb9+eitHfqIgXuCy+Pnk6xc34p+SnesRL3DFyZ3/+oZ8tEs0XgbxApzVI/5qUnsTC/ECl8Wvp9lsKa6Un0oNEC9wUfz2ebFbukX5j0/uUqkB4gWuegMnn4kv51KpAeIFrhrxDka8MfHFC3lnfsUx3pr406RSA8QLIB7xalKpAeIFEI94NanUAPECiEe8mlRqgHgBxCNeTSo1QLwA4hGvJpUaIF4A8YhXk0oNEC+AeMSrSaUGiBdAPOLVpFIDxAsgHvFqUqkB4gUQj3g1qdQA8QKIR7yaVGqAeAHEI15NKjVAvADiEa8mlRogXgDxiFeTSg0QL4B4xKtJpQaIF0A84tWkUgPECyAe8WpSqQHiBRCP+BOsp34VSxY/Mia+Xu4sP/6mglRqgHiBqxY4bN+2SKUGiBdgxCP+BO4LaTjGGxR/mlRqgHgB1qtH/AlYr96meNarNyqe9eqNime9eqPiWa/eqvjTpFIDxAsgHvFqUqkB4gUQj3g1qdQA8QKIR7yaVGqAeAHEI15NKjVAvADiEa8mlRogXgDxiFeTSg0QL4B4xKtJpQaIF0A84tWkUgPECyAe8WpSqQHiBRCPeDWp1ADxAohHvJpUaoB4AcQjXk0qNUC8AOIRryaVGiBeAPGIV5NKDRAvgHjEq0mlBogXQDzi1aRSA8QLIB7xalKpAeIFrlr1yq1qeryULeJT5hrxfqWz9ceju1KpAeIFrhHvVzpjnTtr4ueTr19eWefOnHi3xGH2uMtZ586c+JOkUgPEC7BsOeJPsJ5mkxdO7syJd4sYb59niLcmvhS+fES8MfHVsuWrb75DvCnxxQv5mbsR1i1PpQaIF+DlHOLVpFIDxAsgHvFqUqkB4gUQj3g1qdQA8QKIR7yaVGqAeAHEI15NKjVAvADiEa8mlRogXgDxiFeTSg0QL4B4xKtJpQaIF0A84tWkUgPECyAe8WpSqQHiBRCPeDWp1ADxAohHvJpUaoB4AcQjXk0qNUC8AOIRryaVGiBeAPGIV5NKDRAvgHjEq0mlBogXQLxp8Zv54w2PTaUGiBeoR3ye+UXNVKRSA8QLtKb67XOWLTSPTaUGiBeoxZfLGAprmrl7HKxle4/iN3PhewhKquXOdvnxFqnUAPECVy5wyJKmdyo+L47uK/HsjhF/z+I3n5zz9fHile6+Ocf4uxVfDmthUJ8llRogXqCa6v2wFga1COvV3wGsV494Gdarv2vx+akTONarv2vxm/nJ92pZr/6uxQtv1dawXv0di98tZzc8NpUaIF6gnupPHuPPkEoNEC/AJ3AQryaVGiBeoBK/fc4+/PFJ+RGcVGqAeIH6vfrZ+umN9+rNiS+/JP7cizqJVGqAeIH2iF8x4q2J9x+0zJTeEZ8ynNUjXk0qNUC8AO/cmRZfslK+YZ9KDRAv0BbPyzmj4nOmemviq2O86so5xCcNZ/WIV5NKDRAvcDDVK1/QpVIDxAtUI371WP9PQSo1QLxA+8OWvJwzJ95dMcGINyi+/Nc57QJIqdQA8QKc1SNeTSo1QLwAH7Y0LZ4PWxoVz4ctjYrnw5ZGxfNhS6vibyKVGiBe4PL18adJpQaIF6iO8Z+1K1c7UqkB4gX4lK1p8beRSg0QL4B4w+LPntq5O92RQHitl0oNEC9Qi18/nXgRX9zpnxjrj0d3pVIDxAtcI97fxwKH1sTPJ1+/uBF/vEEqNUC8gBd//jO22+fsUbzKJpUaIF6As3rEXw3r1d8BjHjEq0mlBogXuPz1Y6fP/FKpAeIFLo/48mILiVRqgHiBK6b6zalP36ZSA8QLcIxHvJpUaoB4AcQjXk0qNUC8AOIRryaVGiBeAPGIV5NKDRAvgHjEq0mlBogXQDzi1aRSA8QLIB7xalKpAeIFEI94NanUAPECiEe8mlRqgHgBxCNeTSo1QLwA4hGvJpUaIF4A8YhXE7MGWZcg/pjRiu/SVYdZiN8hPmkQrw2L2Ok+Qbw2LGKn+wTx2rCIne4TxGvDIna6TxCvDYvY6T5BvDYsYqf7BPHasIid7hPEa8MidrpPEK8Ni9jpPkG8Nixip/vksvj19NQ6t4hPmIvit88Lfyt8/yjiE+byAofVOvU9r1eP+Mgw4rVhETvdJ5eP8ae/mgzxCcNZvTYsYqf7ZKzr1SM+Mox4bVjETvcJ4rVhETvdJ2Ndrx7xkRnrevWIj8xY16tHfGQ4xmvDIna6TxCvDYvY6T5BvDYsYqf7BPHasIid7hPEa8MidrpPEK8Ni9jpPkG8Nixip/sE8dqwiJ3uE8RrwyJ2uk8Qrw2L2Ok+Qbw2LGKn+wTx2rCIne4TxGvDIna6TxCvDYvY6T5BvDYsYqf7BPHasIid7hPEa8MidrpPEK8Ni9jpPkG8Nixip/sE8dqwiJ3uE8RrwyJ2uk8Qrw2L2Ok+Qbw2LGKn+wTx2rCIne4TxGvDIna6TxCvDYvY6T5BvDYsYqf7BPHasIid7hPEa8MidrpPEK8Ni9jpPkG8Nixip/sE8dqwiJ3uE8RrwzolYgUvgPhBwyJW8AKIHzQsYgUvgPhBwyJW8AKIHzQsYgUvgPhBwyJW8AKIHzQsYgUvgPhBwyJW8AJXfUOFW9b0+HsKEB8eFrGCF7hGvP9WkvXHo7sQHxwWsYIXuEb8+unt4DtpTrzv1O17Wl2Wt8MsQ+Lnk69f3Ih/uvSdNKOt72gbNmrxbvnq7HGXX/5OmtHWd7QNG7n4kyA+OCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzQsyF0QiB80LMhdEIgfNCzIXRCIHzSsUxAfMWvMYYiPmDXmMMRHzBpzGOIjZo05DPERs8YchviIWWMOQ3zErDGHIT5i1pjDEB8xa8xhiI+YNeYwxEfMGnMY4iNmjTkM8RGzxhyG+IhZYw5DfMSsMYchPmLWmMM6Fr+e+n/lZ0nT0Yd1K377vPC3+fGC9YgfV1i34uvlyvtethzUdCv+zIiHhLl8jHffS5KJx3hImJCzekgYxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFG6VD8wP82BYOJ7y6q27DRNmzIMMQbDUO80TDEGw1DvNEwxBsNQ7zRMN7AMQrijYJ4oyDeKIg3CuKNgnijIN4oiDcK4o3SlfjNPAu9jnqV+Wtyq6TDGx3r717fB9we58O6aZtbXGTRVcuqsFtb1pF4dxX96jEsY7loJR3e6MhdJcScG+J8WDdt23x62a2/femmZVXYzS3rSLxbL8MPjdvZfn5pJR3eqIKWk1+LR4g5+rgyrJu25c7FctFNy6qwm1vWkfj105t/DgbgF2BY1EmHN9rWFJ0Wc26Jc2Hdte1Uk24Nu7llHYl3C6UEinfzVvH8rZIOb7RRhSsx55Y4/yzqqm3b51l3LXNhN7dsPCPes1yMcsR31bbNfLbrrGU+7OaWjecY7zlxBFSmrLs7xh+IDw1bT92ZWEctK8NubllnZ/Wz0LN6Nz9tv7xWSYc3SlynxZxb4urjRnjbKlXdtKwKu7ll43odP3np4IV3pNfx4W1b+etdFt20rA67tWW8c2cUxBsF8UZBvFEQbxTEGwXxRkG8URBvFMQbBfFGQbxREG8UxBsF8UZBvFEQbxTEGwXxRkG8UUyId5ebPJz9xHH5Xekz8a8L8RGpY0H8Zu6uKv3wdk68/1zu+2sQqk/r3qV5C+Irq7/Ni2G/mfuLir//p/9Qcl5/WbLfxF1kWt6//tsP7u/lM8Vdl1Jek7wsL1K7CyyI3z6XHzJ3Hpf+UoPN/MNb/uCvOCkvPPCK/VXH/v7qaoVSvLs00V2T/N1rPtvl7w8HqWJBvB/ZE6/OGSx0u+l7+/llP7fXR/Pq/uqgUN7sr0Te/Pj2r/DrA8eBDfE7P5ydeHdV8aQ07ibuqZ/x9xfIVfcfiC83dgeF7efffryTmd6EeL+GgLuktLyccFe6rAZy7g8DjfjvW8arm2ILN0O4X1Y/38tMb0K8Py93Vw+Xx3gv8tHdOOmH4qv72+Jr6e4MwP13J1gQ7yfwYkrfPvuz+uKnzaef/By/PDirrzYtzwb8X5vX8ass+8sPC3dd6mCd6BgT4o+4dQ2H9ceOGzIciFewmtzNTG9UPCDeKog3CuKNgnijIN4oiDcK4o2CeKMg3iiINwrijYJ4oyDeKIg3CuKN8n9aO7xhYaWLlgAAAABJRU5ErkJggg==" alt="plot of chunk HistImputed"/> </p>
+
+<p>A quick check with the summary function suggests that imputing data changed the summary statistics for total steps per day very little.  Here is a summary on the original data&hellip;</p>
+
+<pre><code class="r">summary(dfStepsPerDay$steps)
+</code></pre>
+
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    8840   10800   10800   13300   21200
+</code></pre>
+
+<p>And here is a summary on the imputed data set&hellip;</p>
+
+<pre><code class="r">summary(dfStepsPerDayImputed$steps)
+</code></pre>
+
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9820   10800   10800   12800   21200
+</code></pre>
+
+<pre><code class="r">myMeanImputed&lt;-summary(dfStepsPerDayImputed$steps)[4]
+myMedianImputed&lt;-summary(dfStepsPerDayImputed$steps)[3]
+</code></pre>
+
+<p>Recall, the mean number of steps per day in the orignal data was 1.08 &times; 10<sup>4</sup>.<br/>
+The mean number of steps per day in the imputed data is 1.08 &times; 10<sup>4</sup>.  </p>
+
+<p>Recall, the median number of steps per day in the orignal data was 1.08 &times; 10<sup>4</sup>.<br/>
+The median number of steps per day in the imputed data is 1.08 &times; 10<sup>4</sup>.  </p>
+
+<p>Therefore, imputing the data did not change the average total steps per day.  </p>
 
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
 

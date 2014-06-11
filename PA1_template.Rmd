@@ -3,6 +3,8 @@
 
 ## Loading and preprocessing the data
 
+First, let's get the data and check the dimensions of the data frame.
+
 ```{r GetData}
 setwd("C:/Users/Owner/Documents/DataScienceCertification/RepoResearch/peer1/RepData_PeerAssessment1")
 
@@ -15,6 +17,9 @@ dim(df1)
 ```
 
 ## What is mean total number of steps taken per day?
+
+Now we plot a histogram of the total number of steps taken per day and   
+calculate the associated mean and median... 
 
 ```{r AveStepsPerDay}
 
@@ -32,6 +37,9 @@ The median number of steps per day is `r myMedian`.
 
 
 ## What is the average daily activity pattern?
+
+Here we simply calculate the mean number of steps for each time interval, generate  
+a plot, and find the interval with the highest mean...
 
 ```{r MaxInterval}
 
@@ -52,6 +60,76 @@ The mean number of steps in this interval is `r maxSteps`.
 
 
 ## Imputing missing values
+
+Time to deal with missing values (NA).  First, how many are there?
+
+```{r NumberMissing}
+
+nMissing<-sum(is.na(df1))
+
+```
+
+The number of missing values in the dataset = `r nMissing`.  
+
+  
+Now impute missing values - keeping it simple by imputing means for each interval...  
+Include a quick view of the data sets and dimensions to ensure successful imputation
+
+```{r Impute}
+dfMeans<-aggregate(steps~interval,data=df1,mean,rm.NA=TRUE)
+
+df1NA<-df1[is.na(df1$steps),]
+df2<-merge(df1NA[,c("date","interval")],dfMeans)
+df3<-rbind(df1,df2)
+df4<-df3[complete.cases(df3),]
+df4<-df4[order(df4$date, df4$interval),]
+
+head(df1)
+head(df4)
+
+dim(df1)
+dim(df4)
+
+```
+
+After successfully imputing missing data, we plot a histogram of total steps per day
+
+```{r HistImputed}
+dfStepsPerDayImputed<-aggregate(steps~date,data=df4,sum)
+hist(dfStepsPerDayImputed$steps,xlab="Steps Per Day",main="Histogram of Steps Per Day with Imputed Data",col="blue")
+
+
+
+```
+
+A quick check with the summary function suggests that imputing data changed the summary statistics for total steps per day very little.  Here is a summary on the original data...
+
+```{r Summary}
+
+summary(dfStepsPerDay$steps)
+
+
+```
+
+
+And here is a summary on the imputed data set...
+
+```{r ImputeSummary}
+
+summary(dfStepsPerDayImputed$steps)
+myMeanImputed<-summary(dfStepsPerDayImputed$steps)[4]
+myMedianImputed<-summary(dfStepsPerDayImputed$steps)[3]
+
+```
+
+Recall, the mean number of steps per day in the orignal data was `r myMean`.  
+The mean number of steps per day in the imputed data is `r myMeanImputed`.  
+
+Recall, the median number of steps per day in the orignal data was `r myMedian`.  
+The median number of steps per day in the imputed data is `r myMedianImputed`.  
+
+Therefore, imputing the data did not change the average total steps per day.  
+
 
 
 
