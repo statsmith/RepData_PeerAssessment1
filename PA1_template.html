@@ -221,7 +221,7 @@ The median number of steps per day is 1.08 &times; 10<sup>4</sup>.</p>
 
 <h2>What is the average daily activity pattern?</h2>
 
-<p>Here we simply calculate the means number of steps for each time interval, generate<br/>
+<p>Here we simply calculate the mean number of steps for each time interval, generate<br/>
 a plot, and find the interval with the highest mean&hellip;</p>
 
 <pre><code class="r">dfStepsPerInterval&lt;-aggregate(steps~interval,data=df1,mean)
@@ -334,6 +334,58 @@ The median number of steps per day in the imputed data is 1.08 &times; 10<sup>4<
 <p>Therefore, imputing the data did not change the average total steps per day.  </p>
 
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+
+<p>To do this, we need to identify and differentiate weekdays and weekends.<br/>
+First identify the day of the week, then split into weekdays and weekends.<br/>
+Check split with table function&hellip;</p>
+
+<pre><code class="r">df4$Day.of.Week&lt;-weekdays(df4$date)
+df4$Split&lt;-lapply(df4$Day.of.Week, function(x) ifelse(x %in% c(&quot;Saturday&quot;,&quot;Sunday&quot;), &quot;Weekend&quot;,&quot;Weekday&quot;))
+
+df4$Split&lt;-factor(df4$Split,levels=c(&quot;Weekday&quot;,&quot;Weekend&quot;))
+table(df4$Split,df4$Day.of.Week)
+</code></pre>
+
+<pre><code>##          
+##           Friday Monday Saturday Sunday Thursday Tuesday Wednesday
+##   Weekday   2592   2592        0      0     2592    2592      2592
+##   Weekend      0      0     2304   2304        0       0         0
+</code></pre>
+
+<p>We&#39;ve got the data split by weekdays and weekends.<br/>
+Now make a plot of activity across both levels (weekday, weekend).<br/>
+To do so we must first get interval averages by level.<br/>
+Note we are using imputed dataset (df4)&hellip;</p>
+
+<pre><code class="r">df5&lt;-aggregate(steps~interval+Split,data=df4,mean)
+dim(df5)
+</code></pre>
+
+<pre><code>## [1] 576   3
+</code></pre>
+
+<p>Looks like we have the data we need, so let&#39;s make the plot&hellip;</p>
+
+<pre><code class="r">library(ggplot2)
+</code></pre>
+
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.0.3
+</code></pre>
+
+<pre><code class="r">pPanel&lt;-ggplot(data=df5,aes(x=interval,y=steps))
+pPanel&lt;-pPanel + facet_wrap(~Split,nrow=2)
+pPanel&lt;-pPanel + geom_line(col=&quot;blue&quot;)
+pPanel
+</code></pre>
+
+<p><img src="data:image/png;base64,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" alt="plot of chunk panelPlot"/> </p>
+
+<p>A quick peek at the graphs suggests that this person gets up later on weekends<br/>
+(i.e. is less active in the early morning ~ 6-8 AM).  It also appears that he or she<br/>
+stays up a little later on weekends (i.e. is more active late in the day ~ 10 PM and after).<br/>
+Finally, this person is generally more active throughout the day on weekends.  He or she<br/>
+is probably a bright data scientist chained to the desk during the week, only getting up<br/>
+to go to meetings, the coffee pot, and then the restroom&hellip;   :)</p>
 
 </body>
 
